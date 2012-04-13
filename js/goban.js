@@ -30,7 +30,7 @@
   };
 
   GoBoard = function(canvas) {
-    var bGrad, gb, getPos, x, xint, y, yGrad, yint, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var bGrad, blackStone, gb, getPos, nextMove, whiteStone, x, xint, y, yGrad, yint, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     xint = canvas.width / 19;
     yint = canvas.height / 19;
     for (x = _i = _ref = xint / 2, _ref1 = canvas.width; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _i += xint) {
@@ -52,19 +52,35 @@
       yPos = y * yint - yint / 2;
       return [xPos, yPos];
     };
+    whiteStone = function(x, y) {
+      var gradCol, xPos, yPos, _ref10;
+      _ref10 = getPos(x, y), xPos = _ref10[0], yPos = _ref10[1];
+      gradCol = new paper.GradientColor(yGrad, [xPos - xint * 0.5, yPos + yint * 0.5], [xPos, yPos]);
+      return Circ(xPos, yPos, xint / 2.4, null, gradCol);
+    };
+    blackStone = function(x, y) {
+      var gradCol, xPos, yPos, _ref10;
+      _ref10 = getPos(x, y), xPos = _ref10[0], yPos = _ref10[1];
+      gradCol = new paper.GradientColor(bGrad, [xPos + xint * 0.5, yPos - yint * 0.5], [xPos, yPos]);
+      return Circ(xPos, yPos, xint / 2.4, null, gradCol);
+    };
+    nextMove = {
+      stone: null,
+      color: 'white',
+      place: function() {
+        if (this.color === 'white') {
+          this.color = 'black';
+          this.stone = blackStone(-1, -1);
+        } else {
+          this.color = 'white';
+          this.stone = whiteStone(-1, -1);
+        }
+        return this;
+      }
+    };
     return gb = {
-      whiteStone: function(x, y) {
-        var gradCol, xPos, yPos, _ref10;
-        _ref10 = getPos(x, y), xPos = _ref10[0], yPos = _ref10[1];
-        gradCol = new paper.GradientColor(yGrad, [xPos - xint * 0.5, yPos + yint * 0.5], [xPos, yPos]);
-        return Circ(xPos, yPos, xint / 2.4, null, gradCol);
-      },
-      blackStone: function(x, y) {
-        var gradCol, xPos, yPos, _ref10;
-        _ref10 = getPos(x, y), xPos = _ref10[0], yPos = _ref10[1];
-        gradCol = new paper.GradientColor(bGrad, [xPos + xint * 0.5, yPos - yint * 0.5], [xPos, yPos]);
-        return Circ(xPos, yPos, xint / 2.4, null, gradCol);
-      },
+      whiteStone: whiteStone,
+      blackStone: blackStone,
       getPos: getPos,
       findIntersection: function(x, y) {
         var snap;
@@ -72,14 +88,15 @@
           return Math.floor(coord / interval + 1);
         };
         return [snap(x, xint), snap(y, yint)];
-      }
+      },
+      nextMove: nextMove.place()
     };
   };
 
   paper.install(window);
 
   window.onload = function() {
-    var blackMove, canvas, gb, tool;
+    var canvas, gb, tool;
     canvas = document.getElementById("goban");
     paper.setup(canvas);
     gb = GoBoard(canvas);
@@ -87,17 +104,20 @@
     gb.whiteStone(16, 16);
     gb.blackStone(3, 16);
     gb.whiteStone(16, 3);
-    blackMove = gb.blackStone(-1, -1);
     tool = new paper.Tool();
     tool.onMouseMove = function(event) {
       var coords, pos;
       if (event.event.target === canvas) {
         coords = gb.findIntersection(event.event.offsetX, event.event.offsetY);
         pos = gb.getPos.apply(gb, coords);
-        return blackMove.position = pos;
+        return gb.nextMove.stone.position = pos;
       } else {
-        return blackMove.position = [-100, -100];
+        return gb.nextMove.stone.position = [-100, -100];
       }
+    };
+    tool.onMouseDown = function(event) {
+      gb.nextMove.place();
+      return console.log(gb.nextMove);
     };
     return paper.view.draw();
   };

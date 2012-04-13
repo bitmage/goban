@@ -39,22 +39,43 @@ GoBoard = (canvas) ->
     yPos = y * yint - yint / 2
     [xPos, yPos]
 
-  gb =
-    whiteStone: (x, y) ->
-      [xPos, yPos] = getPos x, y
-      gradCol = new paper.GradientColor yGrad, [xPos - xint * 0.5, yPos + yint * 0.5], [xPos, yPos]
-      Circ xPos, yPos, xint / 2.4, null, gradCol
+  whiteStone = (x, y) ->
+    [xPos, yPos] = getPos x, y
+    gradCol = new paper.GradientColor yGrad, [xPos - xint * 0.5, yPos + yint * 0.5], [xPos, yPos]
+    Circ xPos, yPos, xint / 2.4, null, gradCol
 
-    blackStone: (x, y) ->
-      [xPos, yPos] = getPos x, y
-      gradCol = new paper.GradientColor bGrad, [xPos + xint * 0.5, yPos - yint * 0.5], [xPos, yPos]
-      Circ xPos, yPos, xint / 2.4, null, gradCol
+  blackStone = (x, y) ->
+    [xPos, yPos] = getPos x, y
+    gradCol = new paper.GradientColor bGrad, [xPos + xint * 0.5, yPos - yint * 0.5], [xPos, yPos]
+    Circ xPos, yPos, xint / 2.4, null, gradCol
+
+  # state of nextMove
+  nextMove =
+    stone: null
+    color: 'white'
+    place: ->
+      # method for placing a stone and switching color for the next
+
+      if @color == 'white'
+        @color = 'black'
+        @stone = blackStone -1, -1
+      else
+        @color = 'white'
+        @stone = whiteStone -1, -1
+
+      return this
+
+  gb =
+    whiteStone: whiteStone
+    blackStone: blackStone
 
     getPos: getPos
 
     findIntersection: (x, y) ->
       snap = (coord, interval) -> Math.floor (coord / interval + 1)
       [snap(x, xint), snap(y, yint)]
+
+    nextMove: nextMove.place()
 
 paper.install window
 
@@ -68,16 +89,18 @@ window.onload = ->
   gb.blackStone 3, 16
   gb.whiteStone 16, 3
 
-  blackMove = gb.blackStone -1, -1
-
   tool = new paper.Tool()
 
   tool.onMouseMove = (event) ->
     if event.event.target == canvas
       coords = gb.findIntersection event.event.offsetX, event.event.offsetY
       pos = gb.getPos coords...
-      blackMove.position = pos
+      gb.nextMove.stone.position = pos
     else
-      blackMove.position = [-100, -100]
+      gb.nextMove.stone.position = [-100, -100]
+
+  tool.onMouseDown = (event) ->
+    gb.nextMove.place()
+    console.log gb.nextMove
 
   paper.view.draw()
