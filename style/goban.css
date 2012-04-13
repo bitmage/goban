@@ -1,0 +1,5 @@
+canvas#goban {
+  background: #d48137;
+  background-image: url("../img/texture1.jpeg"), url("../img/texture2.jpeg");
+  background-repeat: repeat-x, repeat;
+}
