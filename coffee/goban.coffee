@@ -34,18 +34,29 @@ GoBoard = (canvas) ->
   bGrad = new paper.Gradient [['gray', 0.0], ['black', 1]], 'radial'
   yGrad = new paper.Gradient [['gray', 0.0], ['white', 1]], 'radial'
 
+  getPos = (x, y) ->
+    xPos = x * xint - xint / 2
+    yPos = y * yint - yint / 2
+    [xPos, yPos]
+
   gb =
     whiteStone: (x, y) ->
-      xPos = x * xint - xint / 2
-      yPos = y * yint - yint / 2
+      [xPos, yPos] = getPos x, y
       gradCol = new paper.GradientColor yGrad, [xPos - xint * 0.5, yPos + yint * 0.5], [xPos, yPos]
       Circ xPos, yPos, xint / 2.4, null, gradCol
 
     blackStone: (x, y) ->
-      xPos = x * xint - xint / 2
-      yPos = y * yint - yint / 2
+      [xPos, yPos] = getPos x, y
       gradCol = new paper.GradientColor bGrad, [xPos + xint * 0.5, yPos - yint * 0.5], [xPos, yPos]
       Circ xPos, yPos, xint / 2.4, null, gradCol
+
+    getPos: getPos
+
+    findIntersection: (x, y) ->
+      snap = (coord, interval) -> Math.floor (coord / interval + 1)
+      [snap(x, xint), snap(y, yint)]
+
+paper.install window
 
 window.onload = ->
   canvas = document.getElementById("goban")
@@ -56,5 +67,17 @@ window.onload = ->
   gb.whiteStone 16, 16
   gb.blackStone 3, 16
   gb.whiteStone 16, 3
+
+  blackMove = gb.blackStone -1, -1
+
+  tool = new paper.Tool()
+
+  tool.onMouseMove = (event) ->
+    if event.event.target == canvas
+      coords = gb.findIntersection event.event.offsetX, event.event.offsetY
+      pos = gb.getPos coords...
+      blackMove.position = pos
+    else
+      blackMove.position = [-100, -100]
 
   paper.view.draw()
