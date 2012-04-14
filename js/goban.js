@@ -228,7 +228,6 @@
             for (_m = 0, _len = _ref11.length; _m < _len; _m++) {
               neighbor = _ref11[_m];
               if (neighbor.color === this.color) {
-                console.log('friend!');
                 ngNum = neighbor.groupNum;
                 if (group.num !== ngNum) {
                   ng = groups[ngNum];
@@ -240,7 +239,6 @@
                   status = delete groups[ngNum];
                 }
               } else {
-                console.log('foe!');
                 foe = groups[neighbor.groupNum];
                 if (foe.test() === false) {
                   record.kills = foe;
@@ -260,7 +258,6 @@
               this.color = 'white';
               this.graphic = whiteStone(-1, -1);
             }
-            console.log('history: ', history);
             return this;
           }
         }

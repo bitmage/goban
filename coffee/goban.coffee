@@ -172,7 +172,6 @@ GoBoard = (canvas) ->
 
             #if they're friendly, add them to this group and recalculate liberties
             if neighbor.color == @color
-              console.log 'friend!'
 
               ngNum = neighbor.groupNum
               if group.num != ngNum
@@ -187,7 +186,6 @@ GoBoard = (canvas) ->
 
             #if they're enemies, calculate their liberties and remove them if they have none
             else
-              console.log 'foe!'
               foe = groups[neighbor.groupNum]
               if foe.test() == false
                 record.kills = foe
@@ -207,7 +205,7 @@ GoBoard = (canvas) ->
 
           #console.log 'board: ', board
           #console.log 'groups: ', groups
-          console.log 'history: ', history
+          #console.log 'history: ', history
 
           return this
 
