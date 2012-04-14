@@ -1,3 +1,5 @@
+Object.extend()
+
 Circ = (x, y, radius, line, fill, width) ->
   circ = new paper.Path.Circle(new paper.Point(x, y), radius)
   circ.radius = radius
@@ -106,9 +108,16 @@ GoBoard = (canvas) ->
           return false
 
         #not suicide if any connected friendly groups have more than 1 liberty
-        for neighbor in neighbors @position, false when neighbor.color == @color
-          return false if groups[neighbor.groupNum].liberties() > 1
+        for neighbor in neighbors @position, false
+          if neighbor.color == @color
+            if groups[neighbor.groupNum].liberties() > 1
+              return false
+          else
+            #or if you can kill something
+            if groups[neighbor.groupNum].liberties() == 1
+              return false
 
+        #suicide
         return true
 
       playable: ->
@@ -152,10 +161,11 @@ GoBoard = (canvas) ->
 
           #test to see if a group has liberties
           group.liberties = ->
-            liberties = 0
+            liberties = []
             for stone in this
-              liberties += (neighbors stone).length
-            return liberties
+              #count unique liberties
+              liberties = liberties.union neighbors stone
+            return liberties.length
 
           group.test = ->
             if @liberties() == 0

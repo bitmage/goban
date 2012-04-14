@@ -3,6 +3,8 @@
   var Circ, GoBoard, Line,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
+  Object.extend();
+
   Circ = function(x, y, radius, line, fill, width) {
     var circ;
     circ = new paper.Path.Circle(new paper.Point(x, y), radius);
@@ -154,6 +156,10 @@
               if (groups[neighbor.groupNum].liberties() > 1) {
                 return false;
               }
+            } else {
+              if (groups[neighbor.groupNum].liberties() === 1) {
+                return false;
+              }
             }
           }
           return true;
@@ -203,12 +209,12 @@
             group.num = groups.length;
             group.liberties = function() {
               var liberties, stone, _len, _m;
-              liberties = 0;
+              liberties = [];
               for (_m = 0, _len = this.length; _m < _len; _m++) {
                 stone = this[_m];
-                liberties += (neighbors(stone)).length;
+                liberties = liberties.union(neighbors(stone));
               }
-              return liberties;
+              return liberties.length;
             };
             group.test = function() {
               var stone, _len, _m;
