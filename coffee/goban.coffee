@@ -34,73 +34,198 @@ GoBoard = (canvas) ->
   bGrad = new paper.Gradient [['gray', 0.0], ['black', 1]], 'radial'
   yGrad = new paper.Gradient [['gray', 0.0], ['white', 1]], 'radial'
 
-  getPos = (x, y) ->
+  getPos = (coords) ->
+    [x, y] = coords
     xPos = x * xint - xint / 2
     yPos = y * yint - yint / 2
     [xPos, yPos]
 
   whiteStone = (x, y) ->
-    [xPos, yPos] = getPos x, y
+    [xPos, yPos] = getPos [x, y]
     gradCol = new paper.GradientColor yGrad, [xPos - xint * 0.5, yPos + yint * 0.5], [xPos, yPos]
     Circ xPos, yPos, xint / 2.4, null, gradCol
 
   blackStone = (x, y) ->
-    [xPos, yPos] = getPos x, y
+    [xPos, yPos] = getPos [x, y]
     gradCol = new paper.GradientColor bGrad, [xPos + xint * 0.5, yPos - yint * 0.5], [xPos, yPos]
     Circ xPos, yPos, xint / 2.4, null, gradCol
 
-  # state of nextMove
-  nextMove =
-    stone: null
-    color: 'white'
-    place: ->
-      # method for placing a stone and switching color for the next
+  groups = []
+  history = []
 
-      if @color == 'white'
-        @color = 'black'
-        @stone = blackStone -1, -1
-      else
-        @color = 'white'
-        @stone = whiteStone -1, -1
+  #board state
+  board = ([] for x in [0..18] )
+  board.get = (coord=[]) ->
+    [x, y] = coord
+    if board[x]?
+      return board[x][y]
+    else
+      return undefined
+  board.remove = (coord) ->
+    [x, y] = coord
+    (@get coord).graphic.remove()
+    return delete board[x][y]
 
-      return this
+  #is position valid stone or empty space
+  valid = (pos, shouldBeEmpty=true) ->
+    offBoard = (n) -> n not in [1..19]
+    return false if offBoard(pos[0]) or offBoard(pos[1])
+    return shouldBeEmpty == not (board.get pos)?
 
+  #find neighboring stones or empty spaces
+  neighbors = (pos, empty=true) ->
+    nbs = []
+    [x, y] = pos
+    for pos in [ [x, y-1], [x+1, y], [x, y+1], [x-1, y] ]
+      if valid pos, empty
+        nbs.push (if empty then pos else board.get pos)
+    return nbs
+
+  prisoners =
+    white: 0
+    black: 0
+
+  # interface to control the board
   gb =
+    history: history
     whiteStone: whiteStone
     blackStone: blackStone
+    prisoners: prisoners
 
     getPos: getPos
 
-    findIntersection: (x, y) ->
+    findIntersection: (coords) ->
+      [x, y] = coords
       snap = (coord, interval) -> Math.floor (coord / interval + 1)
       [snap(x, xint), snap(y, yint)]
 
-    nextMove: nextMove.place()
+    nextMove:
+      suicide: ->
+        #not suicide if there are nearby liberties
+        for neighbor in neighbors @position, true
+          return false
 
-paper.install window
+        #not suicide if any connected friendly groups have more than 1 liberty
+        for neighbor in neighbors @position, false when neighbor.color == @color
+          return false if groups[neighbor.groupNum].liberties() > 1
+
+        return true
+
+      playable: ->
+        return false if not valid @position
+        return false if @suicide()
+        if history.length > 0
+          last = history[history.length - 1]
+          if last.ko and last.ko[0] == @position[0] and last.ko[1] == @position[1]
+            return false
+        return true
+
+      graphic: blackStone(-1, -1)
+      position: null
+      color: 'black'
+      hover: (pos) ->
+        @position = gb.findIntersection pos
+        if not @playable()
+          @position = [-1, -1]
+
+        @graphic.position = gb.getPos @position
+
+      place: ->
+        if @playable()
+          [x, y] = @position
+
+          #add this stone to the board
+          board[x][y] =
+            color: @color
+            groupNum: groups.length
+            graphic: @graphic
+
+          #create history record
+          record =
+            color: @color
+            x: x
+            y: y
+
+          group = [@position]
+          group.color = @color
+          group.num = groups.length
+
+          #test to see if a group has liberties
+          group.liberties = ->
+            liberties = 0
+            for stone in this
+              liberties += (neighbors stone).length
+            return liberties
+
+          group.test = ->
+            if @liberties() == 0
+              for stone in this
+                board.remove stone
+              prisoners[@color] += this.length
+              delete groups[group.num]
+              return false
+
+            else
+              return true
+
+          for neighbor in neighbors @position, false
+
+            #if they're friendly, add them to this group and recalculate liberties
+            if neighbor.color == @color
+              console.log 'friend!'
+
+              ngNum = neighbor.groupNum
+              if group.num != ngNum
+                ng = groups[ngNum]
+
+                #update the group for neighbor stones
+                for n in ng
+                  board.get(n).groupNum = groups.length
+
+                group.push ng...
+                status = delete groups[ngNum]
+
+            #if they're enemies, calculate their liberties and remove them if they have none
+            else
+              console.log 'foe!'
+              foe = groups[neighbor.groupNum]
+              if foe.test() == false
+                record.kills = foe
+                record.ko = foe[0] if foe.length == 1
+
+          groups.push group
+          group.test()
+
+          history.push record
+
+          if @color == 'white'
+            @color = 'black'
+            @graphic = blackStone -1, -1
+          else
+            @color = 'white'
+            @graphic = whiteStone -1, -1
+
+          #console.log 'board: ', board
+          #console.log 'groups: ', groups
+          console.log 'history: ', history
+
+          return this
 
 window.onload = ->
   canvas = document.getElementById("goban")
   paper.setup canvas
 
   gb = GoBoard canvas
-  gb.blackStone 4, 4
-  gb.whiteStone 16, 16
-  gb.blackStone 3, 16
-  gb.whiteStone 16, 3
 
   tool = new paper.Tool()
 
   tool.onMouseMove = (event) ->
     if event.event.target == canvas
-      coords = gb.findIntersection event.event.offsetX, event.event.offsetY
-      pos = gb.getPos coords...
-      gb.nextMove.stone.position = pos
+      gb.nextMove.hover [event.event.offsetX, event.event.offsetY]
     else
-      gb.nextMove.stone.position = [-100, -100]
+      gb.nextMove.hover gb.getPos [-1, -1]
 
   tool.onMouseDown = (event) ->
     gb.nextMove.place()
-    console.log gb.nextMove
 
   paper.view.draw()
