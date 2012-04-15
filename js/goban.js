@@ -33,7 +33,7 @@
   };
 
   GoBoard = function(canvas) {
-    var bGrad, blackStone, board, gb, getPos, groups, history, neighbors, prisoners, valid, whiteStone, x, xint, y, yGrad, yint, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var bGrad, blackStone, board, gb, getPos, groups, history, neighbors, prisoners, valid, whiteStone, x, xint, y, yGrad, yint, _i, _j, _k, _l, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     xint = canvas.width / 19;
     yint = canvas.height / 19;
     for (x = _i = _ref = xint / 2, _ref1 = canvas.width; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _i += xint) {
@@ -70,14 +70,10 @@
     };
     groups = [];
     history = [];
-    board = (function() {
-      var _m, _results;
-      _results = [];
-      for (x = _m = 0; _m <= 18; x = ++_m) {
-        _results.push([]);
-      }
-      return _results;
-    })();
+    board = [];
+    for (x = _m = 1; _m <= 19; x = ++_m) {
+      board[x] = [];
+    }
     board.get = function(coord) {
       if (coord == null) {
         coord = [];
@@ -108,15 +104,15 @@
       return shouldBeEmpty === !((board.get(pos)) != null);
     };
     neighbors = function(pos, empty) {
-      var nbs, _len, _m, _ref10;
+      var nbs, _len, _n, _ref10;
       if (empty == null) {
         empty = true;
       }
       nbs = [];
       x = pos[0], y = pos[1];
       _ref10 = [[x, y - 1], [x + 1, y], [x, y + 1], [x - 1, y]];
-      for (_m = 0, _len = _ref10.length; _m < _len; _m++) {
-        pos = _ref10[_m];
+      for (_n = 0, _len = _ref10.length; _n < _len; _n++) {
+        pos = _ref10[_n];
         if (valid(pos, empty)) {
           nbs.push((empty ? pos : board.get(pos)));
         }
@@ -143,15 +139,15 @@
       },
       nextMove: {
         suicide: function() {
-          var neighbor, _len, _len1, _m, _n, _ref10, _ref11;
+          var neighbor, _len, _len1, _n, _o, _ref10, _ref11;
           _ref10 = neighbors(this.position, true);
-          for (_m = 0, _len = _ref10.length; _m < _len; _m++) {
-            neighbor = _ref10[_m];
+          for (_n = 0, _len = _ref10.length; _n < _len; _n++) {
+            neighbor = _ref10[_n];
             return false;
           }
           _ref11 = neighbors(this.position, false);
-          for (_n = 0, _len1 = _ref11.length; _n < _len1; _n++) {
-            neighbor = _ref11[_n];
+          for (_o = 0, _len1 = _ref11.length; _o < _len1; _o++) {
+            neighbor = _ref11[_o];
             if (neighbor.color === this.color) {
               if (groups[neighbor.groupNum].liberties() > 1) {
                 return false;
@@ -191,7 +187,7 @@
           return this.graphic.position = gb.getPos(this.position);
         },
         place: function() {
-          var foe, group, n, neighbor, ng, ngNum, record, status, _len, _len1, _m, _n, _ref10, _ref11;
+          var foe, group, n, neighbor, ng, ngNum, record, status, _len, _len1, _n, _o, _ref10, _ref11;
           if (this.playable()) {
             _ref10 = this.position, x = _ref10[0], y = _ref10[1];
             board[x][y] = {
@@ -208,19 +204,19 @@
             group.color = this.color;
             group.num = groups.length;
             group.liberties = function() {
-              var liberties, stone, _len, _m;
+              var liberties, stone, _len, _n;
               liberties = [];
-              for (_m = 0, _len = this.length; _m < _len; _m++) {
-                stone = this[_m];
+              for (_n = 0, _len = this.length; _n < _len; _n++) {
+                stone = this[_n];
                 liberties = liberties.union(neighbors(stone));
               }
               return liberties.length;
             };
             group.test = function() {
-              var stone, _len, _m;
+              var stone, _len, _n;
               if (this.liberties() === 0) {
-                for (_m = 0, _len = this.length; _m < _len; _m++) {
-                  stone = this[_m];
+                for (_n = 0, _len = this.length; _n < _len; _n++) {
+                  stone = this[_n];
                   board.remove(stone);
                 }
                 prisoners[this.color] += this.length;
@@ -231,14 +227,14 @@
               }
             };
             _ref11 = neighbors(this.position, false);
-            for (_m = 0, _len = _ref11.length; _m < _len; _m++) {
-              neighbor = _ref11[_m];
+            for (_n = 0, _len = _ref11.length; _n < _len; _n++) {
+              neighbor = _ref11[_n];
               if (neighbor.color === this.color) {
                 ngNum = neighbor.groupNum;
                 if (group.num !== ngNum) {
                   ng = groups[ngNum];
-                  for (_n = 0, _len1 = ng.length; _n < _len1; _n++) {
-                    n = ng[_n];
+                  for (_o = 0, _len1 = ng.length; _o < _len1; _o++) {
+                    n = ng[_o];
                     board.get(n).groupNum = groups.length;
                   }
                   group.push.apply(group, ng);

@@ -56,7 +56,8 @@ GoBoard = (canvas) ->
   history = []
 
   #board state
-  board = ([] for x in [0..18] )
+  board = []
+  board[x] = [] for x in [1..19]
   board.get = (coord=[]) ->
     [x, y] = coord
     if board[x]?
