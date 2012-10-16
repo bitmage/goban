@@ -21,7 +21,7 @@ The main goal is to create open standards for Go and get away from the Java cruf
 
 (MIT License)
 
-Copyright (c) 2012 Bitmage <projects@bitmage.com>
+Copyright (c) 2012 Bitmage <projects@bitmage.net>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
