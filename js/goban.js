@@ -10,20 +10,7 @@
       game.onValidatedMove = ui.hoverStone;
       ui.onPlayerMove = game.playerMove;
       game.onAddStone = ui.addStone;
-      game.onRemoveStone = ui.removeStone;
-      game.playerMove('black', [4, 4]);
-      game.playerMove('white', [4, 3]);
-      game.playerMove('black', [5, 4]);
-      game.playerMove('white', [5, 3]);
-      game.playerMove('black', [4, 5]);
-      game.playerMove('white', [3, 4]);
-      game.playerMove('black', [5, 6]);
-      game.playerMove('white', [3, 5]);
-      game.playerMove('black', [6, 5]);
-      game.playerMove('white', [4, 6]);
-      game.playerMove('black', [5, 7]);
-      game.playerMove('white', [6, 4]);
-      return game.playerMove('black', [3, 6]);
+      return game.onRemoveStone = ui.removeStone;
     };
     return window.onload = function() {
       var canvas, gb;
