@@ -86,10 +86,14 @@ define ['js/board-data'],
         yPos = y * yint - yint / 2
         [xPos, yPos]
 
-      getCoord = (pos) ->
-        [x, y] = pos
-        snap = (pos, interval) -> Math.floor (pos / interval + 1)
-        [snap(x, xint), snap(y, yint)]
+      # convert a Paper.js mouse event to a board coordinate
+      snap = (pos, interval) -> Math.floor (pos / interval + 1)
+      getCoord = (event) ->
+        if event.event.target == canvas
+          {x, y} = event.tool._point
+          [snap(x, xint), snap(y, yint)]
+        else
+          [-1, -1]
 
       renderStone = (color, coord) ->
         [xPos, yPos] = getStonePos coord
@@ -103,7 +107,7 @@ define ['js/board-data'],
 
       @hoverStone = (coord) ->
         state.placeHolder[state.currentColor].position = getStonePos(coord)
-
+        updateUI()
 
       @onPlayerMove = ->
 
@@ -137,21 +141,23 @@ define ['js/board-data'],
       for color of state.placeHolder
         state.placeHolder[color] = renderStone color, [-1, -1]
 
+      #lastX = 1
+      #setInterval (=>
+        #@hoverStone [lastX++, 3]
+      #), 1000
+
+
       # wire up events
       tool.onMouseMove = (event) =>
-        if event.event.target == canvas
-          coord = getCoord [event.event.offsetX, event.event.offsetY]
+        coord = getCoord(event)
 
-          if updateCurrentCoord coord
-            @onHover state.currentColor, coord
-
+        if coord[0] is -1
+          @hoverStone [-1, -1]
         else
-          if updateCurrentCoord [-1,-1]
-            @hoverStone [-1, -1]
+          @onHover state.currentColor, coord
 
       tool.onMouseDown = (event) =>
-        coord = getCoord [event.event.offsetX, event.event.offsetY]
-        @onPlayerMove state.currentColor, coord
+        @onPlayerMove state.currentColor, getCoord(event)
 
       updateUI()
 

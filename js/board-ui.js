@@ -4,7 +4,7 @@
 
   define(['js/board-data'], function(Board) {
     return function(canvas) {
-      var Circ, Line, color, getCoord, getStonePos, prop, renderStone, state, stoneColor, switchContext, tool, updateCurrentCoord, updateUI, updating, x, xint, y, yint, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+      var Circ, Line, color, getCoord, getStonePos, prop, renderStone, snap, state, stoneColor, switchContext, tool, updateCurrentCoord, updateUI, updating, x, xint, y, yint, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
       paper.setup(canvas);
       tool = new paper.Tool();
       updating = false;
@@ -83,13 +83,17 @@
         yPos = y * yint - yint / 2;
         return [xPos, yPos];
       };
-      getCoord = function(pos) {
-        var snap;
-        x = pos[0], y = pos[1];
-        snap = function(pos, interval) {
-          return Math.floor(pos / interval + 1);
-        };
-        return [snap(x, xint), snap(y, yint)];
+      snap = function(pos, interval) {
+        return Math.floor(pos / interval + 1);
+      };
+      getCoord = function(event) {
+        var _ref10;
+        if (event.event.target === canvas) {
+          _ref10 = event.tool._point, x = _ref10.x, y = _ref10.y;
+          return [snap(x, xint), snap(y, yint)];
+        } else {
+          return [-1, -1];
+        }
       };
       renderStone = function(color, coord) {
         var gradCol, stone, xPos, yPos, _ref10;
@@ -99,7 +103,8 @@
       };
       this.onHover = function() {};
       this.hoverStone = function(coord) {
-        return state.placeHolder[state.currentColor].position = getStonePos(coord);
+        state.placeHolder[state.currentColor].position = getStonePos(coord);
+        return updateUI();
       };
       this.onPlayerMove = function() {};
       this.addStone = function(color, coord, isMove) {
@@ -133,23 +138,17 @@
       tool.onMouseMove = (function(_this) {
         return function(event) {
           var coord;
-          if (event.event.target === canvas) {
-            coord = getCoord([event.event.offsetX, event.event.offsetY]);
-            if (updateCurrentCoord(coord)) {
-              return _this.onHover(state.currentColor, coord);
-            }
+          coord = getCoord(event);
+          if (coord[0] === -1) {
+            return _this.hoverStone([-1, -1]);
           } else {
-            if (updateCurrentCoord([-1, -1])) {
-              return _this.hoverStone([-1, -1]);
-            }
+            return _this.onHover(state.currentColor, coord);
           }
         };
       })(this);
       tool.onMouseDown = (function(_this) {
         return function(event) {
-          var coord;
-          coord = getCoord([event.event.offsetX, event.event.offsetY]);
-          return _this.onPlayerMove(state.currentColor, coord);
+          return _this.onPlayerMove(state.currentColor, getCoord(event));
         };
       })(this);
       updateUI();
