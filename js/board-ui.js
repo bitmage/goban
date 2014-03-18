@@ -4,7 +4,7 @@
 
   define(['js/board-data'], function(Board) {
     return function(canvas) {
-      var Circ, Line, color, compareCoord, getCoord, getStonePos, prop, renderStone, state, stoneColor, switchContext, tool, updateCurrentCoord, updateUI, updating, x, xint, y, yint, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+      var Circ, Line, color, getCoord, getStonePos, prop, renderStone, state, stoneColor, switchContext, tool, updateCurrentCoord, updateUI, updating, x, xint, y, yint, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
       paper.setup(canvas);
       tool = new paper.Tool();
       updating = false;
@@ -26,14 +26,8 @@
         currentColor: 'black',
         currentCoord: null
       };
-      compareCoord = function(coordA, coordB) {
-        if (!(Array.isArray(coordA) && Array.isArray(coordB))) {
-          return false;
-        }
-        return coordA[0] === coordB[0] && coordA[1] === coordB[1];
-      };
       updateCurrentCoord = function(coord) {
-        if (compareCoord(coord, state.currentCoord)) {
+        if (Board.compareCoord(coord, state.currentCoord)) {
           return false;
         } else {
           state.currentCoord = coord;

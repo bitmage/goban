@@ -5,7 +5,6 @@ define ->
 
     board.get = (coord) ->
       [x,y] = coord
-      console.log('should be array', board[x]) unless board[x]
       board[x]?[y]
 
     board.set = (coord, stone) ->
@@ -21,5 +20,19 @@ define ->
 
   Board.switchColor = (color) ->
     if color is 'black' then 'white' else 'black'
+
+  Board.compareCoord = (coordA, coordB) ->
+    _.isEqual coordA, coordB
+
+  Board.unionCoord = (coordsA, coordsB) ->
+    newCoords = _.clone coordsA
+
+    exists = (b) ->
+      _.any coordsA, (a) -> _.isEqual a, b
+
+    _.each coordsB, (b) ->
+      newCoords.push b unless exists(b)
+
+    return newCoords
 
   return Board

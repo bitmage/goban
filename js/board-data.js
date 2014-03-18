@@ -13,9 +13,6 @@
       board.get = function(coord) {
         var y, _ref;
         x = coord[0], y = coord[1];
-        if (!board[x]) {
-          console.log('should be array', board[x]);
-        }
         return (_ref = board[x]) != null ? _ref[y] : void 0;
       };
       board.set = function(coord, stone) {
@@ -41,6 +38,24 @@
       } else {
         return 'black';
       }
+    };
+    Board.compareCoord = function(coordA, coordB) {
+      return _.isEqual(coordA, coordB);
+    };
+    Board.unionCoord = function(coordsA, coordsB) {
+      var exists, newCoords;
+      newCoords = _.clone(coordsA);
+      exists = function(b) {
+        return _.any(coordsA, function(a) {
+          return _.isEqual(a, b);
+        });
+      };
+      _.each(coordsB, function(b) {
+        if (!exists(b)) {
+          return newCoords.push(b);
+        }
+      });
+      return newCoords;
     };
     return Board;
   });

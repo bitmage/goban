@@ -40,7 +40,7 @@ define ['js/board-data'],
 
       suicide = (color, coord) ->
         # not suicide if there are nearby liberties
-        for neighbor in neighbors coord, true
+        if neighbors(coord, true).length > 0
           return false
 
         # not suicide if any connected friendly groups have more than 1 liberty
@@ -68,6 +68,32 @@ define ['js/board-data'],
             return false
         return true
 
+      Group = (color, coord) ->
+        group = [coord]
+        group.color = color
+        group.num = groups.length
+
+        #test to see if a group has liberties
+        group.liberties = ->
+          liberties = []
+          for stone in this
+            #count unique liberties
+            liberties = Board.unionCoord liberties, neighbors(stone)
+          return liberties.length
+
+        group.test = =>
+          if group.liberties() == 0
+            for stone in group
+              removeStone stone
+            prisoners[color] += group.length
+            delete groups[group.num]
+            return false
+
+          else
+            return true
+
+        return group
+
       place = (color, coord) =>
 
         if playable(color, coord)
@@ -87,28 +113,7 @@ define ['js/board-data'],
             x: x
             y: y
 
-          group = [coord]
-          group.color = color
-          group.num = groups.length
-
-          #test to see if a group has liberties
-          group.liberties = ->
-            liberties = []
-            for stone in this
-              #count unique liberties
-              liberties = _.union liberties, neighbors(stone)
-            return liberties.length
-
-          group.test = =>
-            if group.liberties() == 0
-              for stone in group
-                removeStone stone
-              prisoners[color] += group.length
-              delete groups[group.num]
-              return false
-
-            else
-              return true
+          group = Group(color, coord)
 
           for neighbor in neighbors coord, false
 
@@ -124,18 +129,19 @@ define ['js/board-data'],
                   board.get(n).groupNum = groups.length
 
                 group.push ng...
-                status = delete groups[ngNum]
+                delete groups[ngNum]
 
             #if they're enemies, calculate their liberties and remove them if they have none
             else
               foe = groups[neighbor.groupNum]
-              if foe.test() == false
+
+              # sometimes we double kill due to multiple neighbor
+              # stones from the same group - just ignore if 'foe' is undefined
+              if foe?.test() == false
                 record.kills = foe
                 record.ko = foe[0] if foe.length == 1
 
           groups.push group
-          group.test()
-
           history.push record
 
           state.nextMove = Board.switchColor(state.nextMove)
@@ -152,8 +158,13 @@ define ['js/board-data'],
       @checkValidMove = (color, coord) ->
         if playable(color, coord)
           @onValidatedMove coord
+          return true
         else
           @onValidatedMove [-1, -1]
+          return false
+
+      @getState = ->
+        _.clone state
 
       # manual bindAll, since lodash isn't cooperating
       for own prop of @

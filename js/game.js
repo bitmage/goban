@@ -4,7 +4,7 @@
 
   define(['js/board-data'], function(Board) {
     return function() {
-      var board, groups, history, neighbors, place, playable, prisoners, prop, removeStone, state, suicide, valid;
+      var Group, board, groups, history, neighbors, place, playable, prisoners, prop, removeStone, state, suicide, valid;
       state = {
         groups: [],
         history: [],
@@ -48,15 +48,13 @@
         };
       })(this);
       suicide = function(color, coord) {
-        var neighbor, _i, _j, _len, _len1, _ref, _ref1;
-        _ref = neighbors(coord, true);
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          neighbor = _ref[_i];
+        var neighbor, _i, _len, _ref;
+        if (neighbors(coord, true).length > 0) {
           return false;
         }
-        _ref1 = neighbors(coord, false);
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          neighbor = _ref1[_j];
+        _ref = neighbors(coord, false);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          neighbor = _ref[_i];
           if (neighbor.color === color) {
             if (groups[neighbor.groupNum].liberties() > 1) {
               return false;
@@ -88,9 +86,41 @@
         }
         return true;
       };
+      Group = function(color, coord) {
+        var group;
+        group = [coord];
+        group.color = color;
+        group.num = groups.length;
+        group.liberties = function() {
+          var liberties, stone, _i, _len;
+          liberties = [];
+          for (_i = 0, _len = this.length; _i < _len; _i++) {
+            stone = this[_i];
+            liberties = Board.unionCoord(liberties, neighbors(stone));
+          }
+          return liberties.length;
+        };
+        group.test = (function(_this) {
+          return function() {
+            var stone, _i, _len;
+            if (group.liberties() === 0) {
+              for (_i = 0, _len = group.length; _i < _len; _i++) {
+                stone = group[_i];
+                removeStone(stone);
+              }
+              prisoners[color] += group.length;
+              delete groups[group.num];
+              return false;
+            } else {
+              return true;
+            }
+          };
+        })(this);
+        return group;
+      };
       place = (function(_this) {
         return function(color, coord) {
-          var foe, group, n, neighbor, ng, ngNum, record, status, x, y, _i, _j, _len, _len1, _ref;
+          var foe, group, n, neighbor, ng, ngNum, record, x, y, _i, _j, _len, _len1, _ref;
           if (playable(color, coord)) {
             x = coord[0], y = coord[1];
             board.set(coord, {
@@ -103,32 +133,7 @@
               x: x,
               y: y
             };
-            group = [coord];
-            group.color = color;
-            group.num = groups.length;
-            group.liberties = function() {
-              var liberties, stone, _i, _len;
-              liberties = [];
-              for (_i = 0, _len = this.length; _i < _len; _i++) {
-                stone = this[_i];
-                liberties = _.union(liberties, neighbors(stone));
-              }
-              return liberties.length;
-            };
-            group.test = function() {
-              var stone, _i, _len;
-              if (group.liberties() === 0) {
-                for (_i = 0, _len = group.length; _i < _len; _i++) {
-                  stone = group[_i];
-                  removeStone(stone);
-                }
-                prisoners[color] += group.length;
-                delete groups[group.num];
-                return false;
-              } else {
-                return true;
-              }
-            };
+            group = Group(color, coord);
             _ref = neighbors(coord, false);
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
               neighbor = _ref[_i];
@@ -141,11 +146,11 @@
                     board.get(n).groupNum = groups.length;
                   }
                   group.push.apply(group, ng);
-                  status = delete groups[ngNum];
+                  delete groups[ngNum];
                 }
               } else {
                 foe = groups[neighbor.groupNum];
-                if (foe.test() === false) {
+                if ((foe != null ? foe.test() : void 0) === false) {
                   record.kills = foe;
                   if (foe.length === 1) {
                     record.ko = foe[0];
@@ -154,7 +159,6 @@
               }
             }
             groups.push(group);
-            group.test();
             history.push(record);
             return state.nextMove = Board.switchColor(state.nextMove);
           }
@@ -168,10 +172,15 @@
       this.onValidatedMove = function() {};
       this.checkValidMove = function(color, coord) {
         if (playable(color, coord)) {
-          return this.onValidatedMove(coord);
+          this.onValidatedMove(coord);
+          return true;
         } else {
-          return this.onValidatedMove([-1, -1]);
+          this.onValidatedMove([-1, -1]);
+          return false;
         }
+      };
+      this.getState = function() {
+        return _.clone(state);
       };
       for (prop in this) {
         if (!__hasProp.call(this, prop)) continue;

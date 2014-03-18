@@ -15,6 +15,7 @@ require ['js/board-ui', 'js/game'],
       game.onAddStone = ui.addStone
       game.onRemoveStone = ui.removeStone
 
+      # test ko
       #game.playerMove 'black', [3,4]
       #game.playerMove 'white', [3,5]
       #game.playerMove 'black', [4,5]
@@ -24,6 +25,25 @@ require ['js/board-ui', 'js/game'],
       #game.playerMove 'black', [4,3]
       #game.playerMove 'white', [4,6]
       #game.playerMove 'black', [5,6]
+
+      # test throw-in
+      game.playerMove 'black', [4,4]
+      game.playerMove 'white', [4,3]
+      game.playerMove 'black', [5,4]
+      game.playerMove 'white', [5,3]
+      game.playerMove 'black', [4,5]
+      game.playerMove 'white', [3,4]
+      game.playerMove 'black', [5,6]
+      game.playerMove 'white', [3,5]
+      game.playerMove 'black', [6,5]
+      game.playerMove 'white', [4,6]
+      game.playerMove 'black', [5,7]
+      game.playerMove 'white', [6,4]
+      game.playerMove 'black', [3,6]
+
+      #console.log '5,5 valid:', game.checkValidMove('white', [5,5])
+
+      #console.log game.getState()
 
       #_on ui, 'onHover', game.checkValidMove
       #_on game, 'onValidatedMove', ui.hoverStone

@@ -31,12 +31,8 @@ define ['js/board-data'],
         currentCoord: null
 
       # lazy hover, only send events if coords have changed
-      compareCoord = (coordA, coordB) ->
-        return false unless (Array.isArray(coordA) and Array.isArray(coordB))
-        coordA[0] is coordB[0] and coordA[1] is coordB[1]
-
       updateCurrentCoord = (coord) ->
-        if compareCoord(coord, state.currentCoord)
+        if Board.compareCoord(coord, state.currentCoord)
           return false
 
         else
